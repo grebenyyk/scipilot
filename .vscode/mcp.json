@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "scipilot": {
+      "type": "stdio",
+      "command": "/Users/dimitrygrebenyuk/clawd/scipilot/.venv/bin/python",
+      "args": ["-m", "scipilot.server", "--tools-dir", "./tools"],
+      "cwd": "/Users/dimitrygrebenyuk/clawd/scipilot"
+    }
+  }
+}

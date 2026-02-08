@@ -1,0 +1,168 @@
+# Example: RASPA - Classical molecular simulation
+# Place this file in tools/ directory and customize for your installation
+#
+# SECURITY: This file executes with full shell privileges. Review all command_template
+# and arg_template values carefully. Input values are substituted directly into shell commands.
+
+tool:
+  name: raspa
+  version: "2.0"
+  description: "Classical molecular simulation for gas adsorption in nanoporous materials (MOFs, zeolites)"
+  binary: "simulate"
+  working_directory: "./runs/raspa"
+  environment:
+    type: conda
+    env_name: raspa
+    activate_script: "/Users/dimitrygrebenyuk/opt/anaconda3/etc/profile.d/conda.sh"
+
+operations:
+  - name: run_helium_void_fraction
+    description: "Compute helium void fraction in a MOF using Widom insertion"
+    inputs:
+      - name: framework_file
+        type: file
+        required: false
+        extensions: [".cif"]
+        description: "Optional CIF file to copy into RASPA structures/cif if not already present"
+        arg_template: "{value}"
+
+      - name: framework_name
+        type: string
+        required: false
+        default: "framework"
+        description: "Framework name already available in RASPA structures/cif"
+        arg_template: "{value}"
+
+      - name: unit_cells
+        type: string
+        required: false
+        default: "4 2 2"
+        description: "UnitCells line, e.g., '4 2 2'"
+        arg_template: "{value}"
+
+      - name: temperature
+        type: float
+        required: false
+        default: 298.0
+        unit: "K"
+        description: "External temperature in Kelvin"
+        arg_template: "{value}"
+
+      - name: cycles
+        type: integer
+        required: false
+        default: 10000
+        description: "Number of Monte Carlo cycles"
+        arg_template: "{value}"
+
+      - name: initialization_cycles
+        type: integer
+        required: false
+        default: ""
+        description: "Number of initialization cycles"
+        arg_template: "{value}"
+
+      - name: equilibration_cycles
+        type: integer
+        required: false
+        default: ""
+        description: "Number of equilibration cycles"
+        arg_template: "{value}"
+
+      - name: print_every
+        type: integer
+        required: false
+        default: 1000
+        description: "PrintEvery in cycles"
+        arg_template: "{value}"
+
+      - name: print_properties_every
+        type: integer
+        required: false
+        default: 1000
+        description: "PrintPropertiesEvery in cycles"
+        arg_template: "{value}"
+
+      - name: forcefield
+        type: string
+        required: false
+        default: "ExampleMOFsForceField"
+        description: "Forcefield name"
+        arg_template: "{value}"
+
+      - name: molecule_definition
+        type: string
+        required: false
+        default: "ExampleDefinitions"
+        description: "MoleculeDefinition for helium"
+        arg_template: "{value}"
+
+      - name: widom_probability
+        type: float
+        required: false
+        default: 1.0
+        description: "Widom insertion probability for helium"
+        arg_template: "{value}"
+
+      - name: helium_void_fraction_line
+        type: string
+        required: false
+        default: ""
+        description: "Optional line like 'HeliumVoidFraction 0.61'"
+        arg_template: "{value}"
+        
+    command_template: |
+      : "${{RASPA_DIR:=${{CONDA_PREFIX}}}}"
+      export RASPA_DIR
+      export RASPAPATH="${{RASPA_DIR}}/share/raspa"
+      export DYLD_LIBRARY_PATH="${{RASPA_DIR}}/lib"
+      export LD_LIBRARY_PATH="${{RASPA_DIR}}/lib"
+      framework_path="${{RASPAPATH}}/structures/cif/{framework_name}.cif"
+      if [ -n "{framework_file}" ]; then
+        mkdir -p "${{RASPAPATH}}/structures/cif"
+        if [ "{framework_file}" != "${{framework_path}}" ]; then
+          cp {framework_file} "${{framework_path}}"
+        fi
+      elif [ ! -f "${{framework_path}}" ]; then
+        echo "Framework CIF not found: ${{framework_path}}" >&2
+        echo "Provide framework_file or place the CIF in RASPA structures/cif." >&2
+        exit 2
+      fi
+      cat > simulation.input <<EOF
+      SimulationType        MonteCarlo
+      NumberOfCycles        {cycles}
+      PrintEvery            {print_every}
+      PrintPropertiesEvery  {print_properties_every}
+
+      Forcefield            {forcefield}
+
+      Framework 0
+      FrameworkName {framework_name}
+      UnitCells {unit_cells}
+      ExternalTemperature {temperature}
+      {helium_void_fraction_line}
+
+      Component 0 MoleculeName             helium
+                  MoleculeDefinition       {molecule_definition}
+                  WidomProbability         {widom_probability}
+                  CreateNumberOfMolecules  0
+      EOF
+      if [ -n "{initialization_cycles}" ]; then
+        echo "NumberOfInitializationCycles  {initialization_cycles}" >> simulation.input
+      fi
+      if [ -n "{equilibration_cycles}" ]; then
+        echo "NumberOfEquilibrationCycles  {equilibration_cycles}" >> simulation.input
+      fi
+      {binary} simulation.input
+    
+    outputs:
+      - name: helium_void_fraction
+        path: "{working_dir}/Output/System_0/*.data"
+        type: float
+        description: "Average Widom Rosenbluth-weight (helium void fraction)"
+        extract_pattern: '\[helium\] Average Widom Rosenbluth-weight:\s*([-+]?[0-9.]+)'
+        
+      - name: raw_output
+        path: "{working_dir}/Output/System_0/*.data"
+        type: text
+        description: "Complete simulation output"

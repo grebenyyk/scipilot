@@ -1,0 +1,25 @@
+scipilot/__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/    
+
+# User's tool descriptors (they add their own)
+tools/
+!tools/.gitkeep
+
+# Runtime files
+runs/
+*.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+# macOS
+.DS_Store
+# Note: .vscode/ is tracked for MCP config
