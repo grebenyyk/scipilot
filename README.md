@@ -1,5 +1,9 @@
 # SciPilot
 
+[![Python](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP](https://img.shields.io/badge/MCP-Protocol-orange.svg)](https://modelcontextprotocol.io/)
+
 Natural language interface for scientific command-line tools via Model Context Protocol (MCP).
 
 ![scipilot](assets/scipilot.png)
