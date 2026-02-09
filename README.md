@@ -55,6 +55,8 @@ operations:
 
 See `examples/` for complete tool descriptors.
 
+> ⚠️ **Security Note**: Tool YAML files execute with full shell privileges. Only load tool descriptors you trust and have reviewed. User inputs are substituted directly into shell command templates.
+
 ## Project Structure
 
 ```
@@ -80,8 +82,6 @@ mypy scipilot/
 # Format
 ruff format .
 ```
-
-> ⚠️ **Security Note**: Tool YAML files execute with full shell privileges. Only load tool descriptors you trust and have reviewed. User inputs are substituted directly into shell command templates.
 
 ## License
 
